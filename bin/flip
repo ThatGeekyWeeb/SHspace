@@ -1,0 +1,41 @@
+#!/bin/sh
+# shellcheck disable=SC2016
+usage() {
+  printf 'flip: flips or swaps $1
+  flip(): 
+    - Make use of `realpath` to resolve symlinks 
+    - when only $1 is given and flip the location of $1
+    - so that the symlink becomes the real file
+  swap():
+    - Make use of `realpath` to `mv` $1 to $2
+    - and make $1 the symlink 
+    - while $2 becomes the real file
+  -- `ln` + `mv` are always used
+  -- Please do not attempt to use flip with symlink chains
+'
+  exit 1
+}
+#swap() {
+#  
+#}
+flip(){
+  echo "flipping"
+  [ ! -h "$1" ] && usage
+  IFS=""; lo=$(realpath "$1")
+  mv "${lo}" "${1}"; ln -s "$(realpath ${1})" "${lo}" || exit 1 # ln can be weird.. exit if fails
+  # $1 MUST be a symlink as you (sadly) cannot see _what links to_ an item
+}
+case "$#" in
+  1)
+    case "$1" in
+      -[Hh]|--[Hh]elp|?) usage;;
+      *) flip "$@";;
+    esac
+  ;;
+  2)
+    case "$1" in
+      -[Hh]|--[Hh]elp|?) usage;;
+      *) swap "$@";;
+    esac
+  ;;
+esac
